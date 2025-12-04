@@ -82,4 +82,8 @@ Get details of a specific release.
 Get logs for a specific release.
 - `releaseId` (required): The ID of the release.
 - `project` (optional): Project name (overrides default).
+
+### `get_logs_from_url`
+Get logs from a build or release URL. The URL is parsed to extract the project name and build/release ID automatically.
+- `url` (required): The full URL of the build or release (e.g., `https://ado.company.com/DefaultCollection/ABCD/_build/results?buildId=136932&view=logs`).
 # adomcp

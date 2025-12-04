@@ -257,6 +257,50 @@ func main() {
 		}, nil
 	})
 
+	// Register get_logs_from_url
+	server.RegisterTool(mcp.Tool{
+		Name:        "get_logs_from_url",
+		Description: "Get logs from a build or release URL",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"url": map[string]interface{}{
+					"type": "string",
+					"description": "The full URL of the build or release",
+				},
+			},
+			"required": []string{"url"},
+		},
+	}, func(args map[string]interface{}) (*mcp.CallToolResult, error) {
+		urlStr, ok := args["url"].(string)
+		if !ok {
+			return nil, fmt.Errorf("url is required and must be a string")
+		}
+
+		parsed, err := azuredevops.ParseURL(urlStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse URL: %v", err)
+		}
+
+		var logs string
+		switch parsed.Type {
+		case azuredevops.ResourceBuild:
+			logs, err = client.GetBuildLogs(parsed.Project, parsed.ID)
+		case azuredevops.ResourceRelease:
+			logs, err = client.GetReleaseLogs(parsed.Project, parsed.ID)
+		default:
+			return nil, fmt.Errorf("unknown resource type")
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{{Type: "text", Text: logs}},
+		}, nil
+	})
+
 	log.Printf("Starting MCP server on port %s...", port)
 	if err := http.ListenAndServe(":"+port, server); err != nil {
 		log.Fatal(err)
